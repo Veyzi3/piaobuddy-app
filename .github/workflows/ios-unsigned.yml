@@ -1,24 +1,95 @@
-workflows:
-  ios-unsigned:
-    name: iOS unsigned IPA
-    instance_type: mac_mini_m2        # ← 关键，只写这个
-    max_build_duration: 60
-    environment:
-      flutter: stable
-      xcode: latest                   # 别写 15 及以下，已全量弃用
-      cocoapods: default
-    scripts:
-      - name: Get packages
-        script: flutter pub get
-      - name: Pod install
-        script: |
-          cd ios && pod install
-      - name: Build without codesign
-        script: flutter build ios --release --no-codesign
-      - name: Package to IPA
-        script: |
+name: Build unsigned iOS IPA
+
+# 用途：在 GitHub 的 macOS 机器上编译出「未签名 IPA」，
+# 下载后用 Sideloadly / 爱思助手 在 Windows 上用自己的 Apple ID 签名装机。
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+    inputs:
+      build_name:
+        description: '版本号 (CFBundleShortVersionString)，留空则用 pubspec.yaml'
+        required: false
+        default: ''
+
+# 同一分支只保留最新一次构建，避免排队浪费 macOS 额度
+concurrency:
+  group: ios-unsigned-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ios:
+    name: Build unsigned IPA
+    # macOS 14 已被逐步淘汰，这里用 latest 跟随官方最新的 Intel 镜像
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          # 必须与 pubspec.yaml 的 sdk: ^3.13.7 匹配（Dart 3.13 = Flutter 3.47.x）
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+
+      - name: Toolchain info
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS (no codesign)
+        run: |
+          ARGS="--release --no-codesign --build-number=${{ github.run_number }}"
+          if [ -n "${{ github.event.inputs.build_name }}" ]; then
+            ARGS="$ARGS --build-name=${{ github.event.inputs.build_name }}"
+          fi
+          flutter build ios $ARGS
+
+      - name: Package into IPA
+        run: |
+          set -euo pipefail
+          APP="build/ios/iphoneos/Runner.app"
+          if [ ! -d "$APP" ]; then
+            echo "::error::编译产物 $APP 不存在，检查上面的 Build iOS 日志"
+            exit 1
+          fi
+          rm -rf Payload Runner-unsigned.ipa
           mkdir -p Payload
-          cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -qr Runner-unsigned.ipa Payload
-    artifacts:
-      - Runner-unsigned.ipa
+          cp -R "$APP" Payload/
+          zip -qry Runner-unsigned.ipa Payload
+          echo "--- 包体校验 ---"
+          ls -lh Runner-unsigned.ipa
+          unzip -l Runner-unsigned.ipa | head -20
+          echo "--- Info.plist 关键字段 ---"
+          plutil -p Payload/Runner.app/Info.plist \
+            | grep -E 'CFBundleIdentifier|CFBundleShortVersionString|CFBundleVersion|CFBundleDisplayName|CFBundleName'
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: piaobuddy-unsigned-ipa
+          path: Runner-unsigned.ipa
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "### iOS 未签名包"
+            echo ""
+            if [ -f Runner-unsigned.ipa ]; then
+              echo "- 产物：\`Runner-unsigned.ipa\` ($(du -h Runner-unsigned.ipa | cut -f1))"
+              echo "- 下载：本次运行的 Artifacts 面板"
+              echo "- 下一步：Windows 上用 Sideloadly 载入此 IPA，填 Apple ID 完成签名装机"
+            else
+              echo "- 构建失败，请查看上方步骤日志"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
