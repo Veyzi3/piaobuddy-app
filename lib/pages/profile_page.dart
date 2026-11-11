@@ -9,6 +9,7 @@ import '../widgets/app_buttons.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/app_menu_tile.dart';
 import '../widgets/app_toast.dart';
+import '../widgets/tab_page_scroll.dart';
 import 'settings_page.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -21,8 +22,7 @@ class ProfilePage extends StatelessWidget {
     return ListenableBuilder(
       listenable: vehicle,
       builder: (context, _) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 24),
+        return TabPageScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

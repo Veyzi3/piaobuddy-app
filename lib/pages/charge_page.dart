@@ -9,6 +9,7 @@ import '../widgets/app_dialog.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/page_header.dart';
 import '../widgets/section_header.dart';
+import '../widgets/tab_page_scroll.dart';
 
 class ChargePage extends StatelessWidget {
   const ChargePage({super.key});
@@ -20,8 +21,7 @@ class ChargePage extends StatelessWidget {
     return ListenableBuilder(
       listenable: vehicle,
       builder: (context, _) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 24),
+        return TabPageScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

@@ -11,7 +11,8 @@ class AppShell extends StatelessWidget {
     required this.indicatorPosition,
     required this.selectedIndex,
     required this.isInteracting,
-    required this.onTabSlideStart,
+    required this.onTabSlideAnchor,
+    required this.onTabSlideBegin,
     required this.onTabSlide,
     required this.onTabSlideEnd,
     required this.onTabTap,
@@ -21,7 +22,8 @@ class AppShell extends StatelessWidget {
   final double indicatorPosition;
   final int selectedIndex;
   final bool isInteracting;
-  final double Function() onTabSlideStart;
+  final double Function() onTabSlideAnchor;
+  final VoidCallback onTabSlideBegin;
   final ValueChanged<double> onTabSlide;
   final VoidCallback onTabSlideEnd;
   final ValueChanged<int> onTabTap;
@@ -29,7 +31,7 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottom = 12.0 + MediaQuery.paddingOf(context).bottom;
+    final bottom = AppBottomNav.floatingBarBottomOffset(context);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
@@ -54,14 +56,15 @@ class AppShell extends StatelessWidget {
               bottom: bottom,
               child: TabBarSlideHandler(
                 tabCount: 4,
-                onSlideStart: onTabSlideStart,
+                onSlideAnchor: onTabSlideAnchor,
+                onSlideBegin: onTabSlideBegin,
                 onSlide: onTabSlide,
                 onSlideEnd: onTabSlideEnd,
-                onTapTab: onTabTap,
                 child: AppBottomNav(
                   indicatorPosition: indicatorPosition,
                   selectedIndex: selectedIndex,
                   isInteracting: isInteracting,
+                  onTabTap: onTabTap,
                 ),
               ),
             ),

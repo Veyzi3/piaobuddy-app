@@ -9,6 +9,7 @@ import '../widgets/app_dialog.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/page_header.dart';
 import '../widgets/section_header.dart';
+import '../widgets/tab_page_scroll.dart';
 
 class DiscoverPage extends StatelessWidget {
   const DiscoverPage({super.key});
@@ -24,8 +25,7 @@ class DiscoverPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 24),
+    return TabPageScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

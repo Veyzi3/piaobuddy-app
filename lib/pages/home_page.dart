@@ -9,6 +9,7 @@ import '../widgets/app_bottom_sheet.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/section_header.dart';
+import '../widgets/tab_page_scroll.dart';
 import 'remote_controls_page.dart';
 
 class HomePage extends StatelessWidget {
@@ -21,8 +22,7 @@ class HomePage extends StatelessWidget {
     return ListenableBuilder(
       listenable: vehicle,
       builder: (context, _) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 16),
+        return TabPageScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

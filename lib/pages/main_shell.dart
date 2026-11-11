@@ -90,13 +90,16 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
     _animatePositionTo(index.toDouble());
   }
 
-  double _onTabSlideStart() {
+  double _onTabSlideAnchor() {
+    return _committedTab.toDouble();
+  }
+
+  void _onTabSlideBegin() {
     _cancelSnap();
     setState(() {
       _isDragging = true;
       _pagePosition = _committedTab.toDouble();
     });
-    return _pagePosition;
   }
 
   void _onTabSlide(double position) {
@@ -121,7 +124,8 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
         indicatorPosition: _indicatorPosition,
         selectedIndex: _committedTab,
         isInteracting: _isInteracting,
-        onTabSlideStart: _onTabSlideStart,
+        onTabSlideAnchor: _onTabSlideAnchor,
+        onTabSlideBegin: _onTabSlideBegin,
         onTabSlide: _onTabSlide,
         onTabSlideEnd: _onTabSlideEnd,
         onTabTap: _selectTab,
